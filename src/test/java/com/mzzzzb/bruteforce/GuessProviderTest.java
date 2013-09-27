@@ -1,4 +1,4 @@
-package com.mzzzzb.bruteforece;
+package com.mzzzzb.bruteforce;
 
 import static org.hamcrest.CoreMatchers.is;
 
