@@ -37,7 +37,7 @@ public class IterationRunnerTest {
 	public void testExtractArchivePass() throws IOException {
 
 		Status result = ReflectionTestUtils.invokeMethod(runner,
-				"extractArchive", "pwd");
+				"extractArchive", " *R");
 
 		Assert.assertEquals(Status.Result.SUCCESS, result.getResult());
 

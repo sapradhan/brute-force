@@ -83,11 +83,15 @@ public class IterationRunner implements Runnable {
 	private Status extractArchive(String generatedPassword)
 			throws InterruptedException, IOException {
 
-		String command = sevenZexe + " t" + " -p" + generatedPassword
-				+ " -w -y " + archiveLocation;
+		String command = sevenZexe + " t " + archiveLocation;
 		logger.debug("running {}", command);
 		Process process = Runtime.getRuntime().exec(command);
 		int resultstatus = -1;
+		
+		byte[] tosend = (generatedPassword + "\n").getBytes();
+		process.getOutputStream().write(tosend);
+		process.getOutputStream().flush();
+		
 		resultstatus = process.waitFor();
 
 		Status status;
