@@ -75,15 +75,20 @@ public class Main {
 		String chars = prop.getProperty("chars", DEFAULT_CHARSET);
 		this.charset = chars.toCharArray();
 		Arrays.sort(this.charset);
-		
+
 		String threadstr = prop.getProperty("threads", "9999");
-		
-		threads = Math.min(Integer.parseInt(threadstr), Runtime.getRuntime().availableProcessors() - 1);
+
+		threads = Math.min(Integer.parseInt(threadstr), Runtime.getRuntime()
+				.availableProcessors() - 1);
 		threads = threads < 1 ? 1 : threads;
 
 		IterationRunner.setArchiveLocation(prop.getProperty("archive"));
 		IterationRunner.setSevenZexe(prop.getProperty("7zexe", "7z"));
 
+		logger.info("7z.exe : {}", IterationRunner.getSevenZexe());
+		logger.info("archive: {}", IterationRunner.getArchiveLocation());
+		logger.info("using {} threads", threads);
+		logger.info("Characters {}", chars);
 		int length = Integer.parseInt(prop.getProperty("length", "8"));
 
 		char[] array = new char[length];
@@ -95,16 +100,17 @@ public class Main {
 			prop.load(m);
 			if (prop.containsKey("password")) {
 				correct = prop.getProperty("password");
-				logger.error("Password already fould: {}",
-						correct);
+				logger.error("Password already fould:{}", correct);
 				System.exit(0);
 			}
 			start = prop.getProperty("start", start);
 			end = prop.getProperty("end", end);
-			logger.info("Resuming from {} till {}", start, end);
+			logger.info("Resuming from '{}' till '{}'", start, end);
 		} catch (IOException e) {
-			logger.info("resume.properties not found will start from beginning");
 			start = "";
+			logger.info(
+					"resume.properties not found will start from '' to '{}'",
+					end);
 		} finally {
 			try {
 				if (m != null)
@@ -125,7 +131,6 @@ public class Main {
 		guessProvider = new GuessProvider();
 		guessProvider.setCharset(this.charset);
 		guessProvider.setSubmitQ(processQ);
-
 
 		processQ = new ArrayBlockingQueue<String>(threads + 1);
 		replyQ = new ArrayBlockingQueue<Status>(2 * threads);
@@ -181,6 +186,7 @@ public class Main {
 				"output.txt", true)));
 
 		try {
+			final long beginTime = System.currentTimeMillis();
 			while (!stop) {
 				Status s = replyQ.take();
 				switch (s.getResult()) {
@@ -188,21 +194,25 @@ public class Main {
 					stop();
 					correct = s.getGuess();
 					logger.error("Password found {}", s.getGuess());
-					output.println(String.format(" %d password found:  %s",
-							System.currentTimeMillis(), s.getGuess()));
+					output.println(String.format(" %d password found:%s",
+							System.currentTimeMillis() - beginTime,
+							passwordPrettyPrint(s.getGuess())));
 					replyQ.clear();
 					System.exit(0);
 					break;
 				case FAIL:
-					output.println(String.format(" %d trial failed:  %s",
-							System.currentTimeMillis(), s.getGuess()));
+					output.println(String.format(" %d trial failed:%s",
+							System.currentTimeMillis() - beginTime,
+							s.getGuess()));
 					break;
 				case ERROR:
-					output.println(String.format(" %d error for :  %s",
-							System.currentTimeMillis(), s.getGuess()));
+					output.println(String.format(" %d error for:%s",
+							System.currentTimeMillis() - beginTime,
+							s.getGuess()));
 				}
 			}
 		} finally {
+			output.flush();
 			output.close();
 		}
 
@@ -273,7 +283,7 @@ public class Main {
 							.format("start=%s", lowestNotProcessed));
 					resume.println(String.format("end=%s", end));
 				} else {
-					resume.println(String.format("password=%s", correct));
+					resume.println(String.format("password=%s", passwordPrettyPrint(correct)));
 				}
 			} catch (IOException e) {
 				System.out.println("Could not write resume file");
@@ -283,7 +293,7 @@ public class Main {
 							lowestNotProcessed));
 					System.out.println(String.format("end=%s", end));
 				} else {
-					System.out.println(String.format("password=%s", correct));
+					System.out.println(String.format("password=%s", passwordPrettyPrint(correct)));
 				}
 			} finally {
 				if (resume != null) {
@@ -292,6 +302,16 @@ public class Main {
 			}
 		}
 
+	}
+
+	private String passwordPrettyPrint(String pwd) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("'");
+		sb.append(pwd).append("'\n").append("Characters:")
+				.append(Arrays.toString(pwd.toCharArray())).append("\nBytes")
+				.append(Arrays.toString(pwd.getBytes()));
+
+		return sb.toString();
 	}
 
 	public static void main(String[] args) throws IOException,
