@@ -32,11 +32,22 @@
 			<version>1.7.5</version>
 		</dependency>
 	</dependencies>
+
+	<scm>
+		<developerConnection>scm:git:https://github.com/sapradhan/brute-force.git</developerConnection>
+		<url>github.com/sapradhan/brute-force.git</url>
+	</scm>
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.4.1</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-jar-plugin</artifactId>
+				<version>2.4</version>
 				<configuration>
 					<archive>
 						<manifest>
@@ -47,6 +58,7 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.1</version>
 				<executions>
 					<execution>
 						<id>uber</id>
